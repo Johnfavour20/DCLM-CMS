@@ -78,6 +78,8 @@ const StatsCard = ({ title, value, icon: Icon, color }) => (
 const FileUpload = ({ onFileSelect, accept = "image/*,application/pdf", label = "Upload Receipt" }) => {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [previewData, setPreviewData] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
   
   const handleDrag = (e) => {
     e.preventDefault();
@@ -103,13 +105,62 @@ const FileUpload = ({ onFileSelect, accept = "image/*,application/pdf", label = 
     setSelectedFile(file);
     const reader = new FileReader();
     reader.onload = (e) => {
-      onFileSelect({
+      const fileData = {
         file: file,
         data: e.target.result,
         name: file.name
-      });
+      };
+      setPreviewData(fileData);
+      onFileSelect(fileData);
     };
     reader.readAsDataURL(file);
+  };
+
+  const renderPreview = () => {
+    if (!previewData) return null;
+    
+    const isImage = previewData.file.type.startsWith('image/');
+    const isPdf = previewData.file.type === 'application/pdf';
+    
+    return (
+      <div className="mt-4 p-4 border rounded-lg bg-gray-50">
+        <div className="flex justify-between items-center mb-2">
+          <h4 className="text-sm font-medium text-gray-700">Preview</h4>
+          <button
+            onClick={() => setShowPreview(!showPreview)}
+            className="text-blue-600 hover:text-blue-800 text-sm"
+          >
+            {showPreview ? 'Hide' : 'Show'} Preview
+          </button>
+        </div>
+        
+        {showPreview && (
+          <div className="mt-2">
+            {isImage && (
+              <img
+                src={previewData.data}
+                alt="Preview"
+                className="max-w-full h-48 object-contain rounded border"
+              />
+            )}
+            {isPdf && (
+              <div className="flex items-center justify-center h-48 bg-gray-200 rounded border">
+                <div className="text-center">
+                  <FileText className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+                  <p className="text-sm text-gray-600">PDF Preview</p>
+                  <p className="text-xs text-gray-500">{previewData.name}</p>
+                </div>
+              </div>
+            )}
+            <div className="mt-2 text-xs text-gray-500">
+              <p>File: {previewData.name}</p>
+              <p>Size: {(previewData.file.size / 1024).toFixed(1)} KB</p>
+              <p>Type: {previewData.file.type}</p>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
   
   return (
@@ -136,6 +187,7 @@ const FileUpload = ({ onFileSelect, accept = "image/*,application/pdf", label = 
         </p>
         <p className="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
       </div>
+      {renderPreview()}
     </div>
   );
 };
@@ -707,7 +759,12 @@ const App = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.description || '-'}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {record.receipt_path ? (
-                    <button className="text-[#4680C2] hover:text-[#3b6da6]">View</button>
+                    <button 
+                      onClick={() => setActiveModal(`preview-${record.id}`)}
+                      className="text-[#4680C2] hover:text-[#3b6da6]"
+                    >
+                      View
+                    </button>
                   ) : (
                     <span className="text-gray-400">None</span>
                   )}
@@ -1303,6 +1360,75 @@ const App = () => {
           </div>
         </form>
       </Modal>
+
+      {/* Receipt Preview Modals */}
+      {paymentData.map(payment => (
+        <Modal 
+          key={`preview-${payment.id}`}
+          show={activeModal === `preview-${payment.id}`} 
+          onClose={() => setActiveModal(null)} 
+          title={`Receipt Preview - ${payment.payment_type}`}
+        >
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-gray-700">Date:</span>
+                <p className="text-gray-600">{formatDate(payment.date)}</p>
+              </div>
+              <div>
+                <span className="font-medium text-gray-700">Amount:</span>
+                <p className="text-gray-600">{formatCurrency(payment.amount)}</p>
+              </div>
+              <div className="col-span-2">
+                <span className="font-medium text-gray-700">Description:</span>
+                <p className="text-gray-600">{payment.description || 'No description'}</p>
+              </div>
+            </div>
+            
+            {payment.receipt_path ? (
+              <div className="border rounded-lg p-4 bg-gray-50">
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Receipt</h4>
+                {payment.receipt_path.toLowerCase().includes('.pdf') ? (
+                  <div className="flex items-center justify-center h-48 bg-gray-200 rounded border">
+                    <div className="text-center">
+                      <FileText className="w-12 h-12 mx-auto text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-600">PDF Receipt</p>
+                      <a 
+                        href={payment.receipt_path} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-800 text-xs"
+                      >
+                        Open PDF
+                      </a>
+                    </div>
+                  </div>
+                ) : (
+                  <img
+                    src={payment.receipt_path}
+                    alt="Receipt"
+                    className="max-w-full h-64 object-contain rounded border mx-auto"
+                  />
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <FileText className="w-12 h-12 mx-auto text-gray-300 mb-2" />
+                <p>No receipt available</p>
+              </div>
+            )}
+            
+            <div className="flex justify-end">
+              <button
+                onClick={() => setActiveModal(null)}
+                className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </Modal>
+      ))}
     </div>
   );
 };
