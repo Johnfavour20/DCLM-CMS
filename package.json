@@ -11,6 +11,8 @@
     "start": "vite"
   },
   "dependencies": {
+    "@eslint/js": "^9.34.0",
+    "globals": "^16.3.0",
     "lucide-react": "^0.303.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
