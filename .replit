@@ -1,5 +1,26 @@
+
 modules = ["nodejs-20", "python-3.12", "web"]
 
 [nix]
 channel = "stable-25_05"
 packages = ["freetype", "glibcLocales"]
+
+[[ports]]
+localPort = 5001
+externalPort = 80
+
+[[ports]]
+localPort = 5173
+externalPort = 3000
+
+[workflows]
+runButton = "Start Frontend"
+
+[[workflows.workflow]]
+name = "Start Frontend"
+author = 16158705
+mode = "sequential"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
