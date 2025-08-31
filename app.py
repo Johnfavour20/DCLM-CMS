@@ -52,8 +52,8 @@ def init_db():
                 status TEXT DEFAULT 'active'
             )
         ''')
-        # --- CHANGES START HERE ---
-        # The attendance table is being dropped and recreated to add boy and girl counts.
+        # ---CHANGES START HERE---
+        # The attendance table is being dropped and recreated to remove youtube count.
         cursor.execute('''
             DROP TABLE IF EXISTS attendance;
         ''')
@@ -68,11 +68,10 @@ def init_db():
                 children_boys INTEGER NOT NULL,
                 children_girls INTEGER NOT NULL,
                 new_converts INTEGER NOT NULL,
-                youtube INTEGER NOT NULL,
                 total_headcount INTEGER NOT NULL
             )
         ''')
-        # --- CHANGES END HERE ---
+        # ---CHANGES END HERE---
         cursor.execute('''
             DROP TABLE IF EXISTS payments;
         ''')
@@ -193,7 +192,6 @@ def get_attendance(current_user):
             "children_boys": record["children_boys"],
             "children_girls": record["children_girls"],
             "new_converts": record["new_converts"],
-            "youtube": record["youtube"],
             "total_headcount": record["total_headcount"]
         })
 
@@ -212,19 +210,16 @@ def submit_attendance(current_user):
     children_boys = data.get('children_boys')
     children_girls = data.get('children_girls')
     new_converts = data.get('new_converts')
-    youtube = data.get('youtube')
     total_headcount = data.get('total_headcount')
 
-    if not all([service_date, men, women, youth_boys, youth_girls, children_boys, children_girls, total_headcount]):
+    if not all([service_date, men is not None, women is not None, youth_boys is not None, youth_girls is not None, children_boys is not None, children_girls is not None, new_converts is not None, total_headcount is not None]):
         return jsonify({"error": "Missing attendance data"}), 400
 
     try:
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("""
-            INSERT INTO attendance (service_date, men, women, youth_boys, youth_girls, children_boys, children_girls, new_converts, youtube, total_headcount)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (service_date, men, women, youth_boys, youth_girls, children_boys, children_girls, new_converts, youtube, total_headcount))
+        cursor.execute("INSERT INTO attendance (service_date, men, women, youth_boys, youth_girls, children_boys, children_girls, new_converts, total_headcount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                       (service_date, men, women, youth_boys, youth_girls, children_boys, children_girls, new_converts, total_headcount))
         db.commit()
         return jsonify({"message": "Attendance recorded successfully!"}), 201
     except sqlite3.IntegrityError:
@@ -383,7 +378,7 @@ def get_projects(current_user):
 
     return jsonify({"projects": projects_list})
 
-# --- CHANGES START HERE ---
+# ---CHANGES START HERE---
 @app.route('/api/attendance/pdf', methods=['GET'])
 @token_required
 @role_required('secretary')
@@ -411,7 +406,6 @@ def download_attendance_pdf(current_user):
     pdf.cell(15, 10, "Chd Boys", 1)
     pdf.cell(15, 10, "Chd Girls", 1)
     pdf.cell(20, 10, "New Cnv", 1)
-    pdf.cell(20, 10, "Youtube", 1)
     pdf.cell(20, 10, "Total", 1)
     pdf.ln()
 
@@ -425,7 +419,6 @@ def download_attendance_pdf(current_user):
         pdf.cell(15, 8, str(record['children_boys']), 1)
         pdf.cell(15, 8, str(record['children_girls']), 1)
         pdf.cell(20, 8, str(record['new_converts']), 1)
-        pdf.cell(20, 8, str(record['youtube']), 1)
         pdf.cell(20, 8, str(record['total_headcount']), 1)
         pdf.ln()
 
@@ -486,7 +479,7 @@ def get_account_details(current_user):
     ]
     return jsonify({"accounts": accounts})
 
-# --- CHANGES END HERE ---
+# ---CHANGES END HERE---
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=5001)

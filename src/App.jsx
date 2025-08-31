@@ -220,7 +220,6 @@ const App = () => {
     children_boys: 0,
     children_girls: 0,
     new_converts: 0,
-    youtube: 0,
   });
 
   const [paymentForm, setPaymentForm] = useState({
@@ -439,7 +438,6 @@ const App = () => {
             children_boys: 0,
             children_girls: 0,
             new_converts: 0,
-            youtube: 0,
           });
           fetchAttendanceData();
         }
@@ -711,7 +709,6 @@ const App = () => {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Youth (Girls)</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Children (Boys)</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Children (Girls)</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">YouTube</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
             </tr>
           </thead>
@@ -725,7 +722,6 @@ const App = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.youth_girls}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.children_boys}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.children_girls}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{record.youtube}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">{record.total_headcount}</td>
               </tr>
             ))}
@@ -1096,16 +1092,6 @@ const App = () => {
                 type="number"
                 value={attendanceForm.new_converts}
                 onChange={(e) => setAttendanceForm({ ...attendanceForm, new_converts: e.target.value })}
-                min="0"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#4680C2] focus:ring focus:ring-[#4680C2] focus:ring-opacity-50"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">YouTube Views</label>
-              <input
-                type="number"
-                value={attendanceForm.youtube}
-                onChange={(e) => setAttendanceForm({ ...attendanceForm, youtube: e.target.value })}
                 min="0"
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-[#4680C2] focus:ring focus:ring-[#4680C2] focus:ring-opacity-50"
               />
