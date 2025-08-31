@@ -88,7 +88,7 @@ def init_db():
                 receipt_filename TEXT
             )
         ''')
-        
+
         try:
             hashed_password = generate_password_hash('password123', method='scrypt')
             cursor.execute("INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
@@ -97,7 +97,7 @@ def init_db():
             print("Default 'testuser' added.")
         except sqlite3.IntegrityError:
             print("'testuser' already exists.")
-            
+
         db.commit()
 
 # CLI command to initialize the database
@@ -117,10 +117,10 @@ def token_required(f):
                 token = auth_header.split(" ")[1]
             except IndexError:
                 return jsonify({"error": "Token is missing!"}), 401
-        
+
         if not token:
             return jsonify({"error": "Token is missing!"}), 401
-        
+
         try:
             data = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
             db = get_db()
@@ -131,7 +131,7 @@ def token_required(f):
             return jsonify({"error": "Token has expired"}), 401
         except jwt.InvalidTokenError:
             return jsonify({"error": "Token is invalid"}), 401
-        
+
         return f(current_user, *args, **kwargs)
     return decorated
 
@@ -150,26 +150,26 @@ def login():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
-    
+
     if not username or not password:
         return jsonify({"message": "Username and password are required"}), 400
-    
+
     db = get_db()
     cursor = db.cursor()
     cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
     user = cursor.fetchone()
-    
+
     if not user or not check_password_hash(user['password_hash'], password):
         return jsonify({"message": "Invalid username or password"}), 401
-    
+
     token = jwt.encode({'username': user['username'], 'exp': datetime.utcnow() + timedelta(hours=24)},
                        SECRET_KEY, algorithm="HS256")
-    
+
     user_info = {
         "username": user['username'],
         "role": user['role']
     }
-    
+
     return jsonify({"message": "Login successful", "token": token, "user": user_info})
 
 @app.route('/api/attendance', methods=['GET'])
@@ -180,7 +180,7 @@ def get_attendance(current_user):
     cursor = db.cursor()
     cursor.execute("SELECT * FROM attendance ORDER BY service_date DESC")
     attendance = cursor.fetchall()
-    
+
     attendance_list = []
     for record in attendance:
         attendance_list.append({
@@ -196,7 +196,7 @@ def get_attendance(current_user):
             "youtube": record["youtube"],
             "total_headcount": record["total_headcount"]
         })
-        
+
     return jsonify({"attendances": attendance_list})
 
 @app.route('/api/attendance/submit', methods=['POST'])
@@ -217,7 +217,7 @@ def submit_attendance(current_user):
 
     if not all([service_date, men, women, youth_boys, youth_girls, children_boys, children_girls, total_headcount]):
         return jsonify({"error": "Missing attendance data"}), 400
-    
+
     try:
         db = get_db()
         cursor = db.cursor()
@@ -240,7 +240,7 @@ def get_payments(current_user):
     cursor = db.cursor()
     cursor.execute("SELECT * FROM payments ORDER BY date DESC")
     payments = cursor.fetchall()
-    
+
     payments_list = []
     for record in payments:
         payments_list.append({
@@ -268,10 +268,10 @@ def record_payment(current_user):
     account_details = data.get('account_details')
     receipt_data = data.get('receipt_data')
     receipt_filename = data.get('receipt_filename')
-    
+
     if not all([date, payment_type, amount]):
         return jsonify({"error": "Missing payment data"}), 400
-    
+
     try:
         db = get_db()
         cursor = db.cursor()
@@ -280,7 +280,7 @@ def record_payment(current_user):
             VALUES (?, ?, ?, ?, ?, ?, ?)
         """, (date, payment_type, amount, description, account_details, receipt_data, receipt_filename))
         db.commit()
-        
+
         return jsonify({"message": "Payment recorded successfully!", "payment": data}), 201
     except sqlite3.Error as e:
         return jsonify({"error": str(e)}), 500
@@ -293,7 +293,7 @@ def get_users(current_user):
     cursor = db.cursor()
     cursor.execute("SELECT username, role, full_name, phone_number, email, gender FROM users")
     users = cursor.fetchall()
-    
+
     users_list = []
     for user in users:
         users_list.append({
@@ -304,7 +304,7 @@ def get_users(current_user):
             "email": user['email'],
             "gender": user['gender']
         })
-        
+
     return jsonify({"users": users_list})
 
 @app.route('/api/users', methods=['POST'])
@@ -319,19 +319,19 @@ def create_user(current_user):
     phone_number = data.get('phone_number')
     email = data.get('email')
     gender = data.get('gender')
-    
+
     if not all([username, password, role]):
         return jsonify({"error": "Missing user data"}), 400
-        
+
     password_hash = generate_password_hash(password, method='scrypt')
-    
+
     try:
         db = get_db()
         cursor = db.cursor()
         cursor.execute("INSERT INTO users (username, password_hash, role, full_name, phone_number, email, gender) VALUES (?, ?, ?, ?, ?, ?, ?)",
                        (username, password_hash, role, full_name, phone_number, email, gender))
         db.commit()
-        
+
         return jsonify({"message": "User created successfully!", "user": {"username": username, "role": role}}), 201
     except sqlite3.IntegrityError:
         return jsonify({"error": "Username already exists"}), 409
@@ -346,17 +346,17 @@ def create_project(current_user):
     project_name = data.get('project_name')
     target_amount = data.get('target_amount')
     start_date = data.get('start_date')
-    
+
     if not all([project_name, target_amount, start_date]):
         return jsonify({"error": "Missing project data"}), 400
-        
+
     try:
         db = get_db()
         cursor = db.cursor()
         cursor.execute("INSERT INTO projects (project_name, target_amount, start_date) VALUES (?, ?, ?)",
                        (project_name, target_amount, start_date))
         db.commit()
-        
+
         return jsonify({"message": "Project created successfully!", "project_name": project_name}), 201
     except sqlite3.Error as e:
         return jsonify({"error": str(e)}), 500
@@ -369,7 +369,7 @@ def get_projects(current_user):
     cursor = db.cursor()
     cursor.execute("SELECT * FROM projects ORDER BY start_date DESC")
     projects = cursor.fetchall()
-    
+
     projects_list = []
     for project in projects:
         projects_list.append({
@@ -380,7 +380,7 @@ def get_projects(current_user):
             "current_amount": project["current_amount"],
             "status": project["status"]
         })
-        
+
     return jsonify({"projects": projects_list})
 
 # --- CHANGES START HERE ---
@@ -392,7 +392,7 @@ def download_attendance_pdf(current_user):
     cursor = db.cursor()
     cursor.execute("SELECT * FROM attendance ORDER BY service_date DESC")
     attendance = cursor.fetchall()
-    
+
     if not attendance:
         return jsonify({"error": "No attendance data to generate a PDF."}), 404
 
@@ -433,7 +433,7 @@ def download_attendance_pdf(current_user):
     buffer = BytesIO()
     pdf.output(buffer, 'F')
     buffer.seek(0)
-    
+
     return send_file(buffer, as_attachment=True, download_name='attendance_records.pdf', mimetype='application/pdf')
 
 @app.route('/api/payments/pdf', methods=['GET'])
@@ -444,7 +444,7 @@ def download_payments_pdf(current_user):
     cursor = db.cursor()
     cursor.execute("SELECT * FROM payments ORDER BY date DESC")
     payments = cursor.fetchall()
-    
+
     if not payments:
         return jsonify({"error": "No payments data to generate a PDF."}), 404
 
@@ -472,7 +472,7 @@ def download_payments_pdf(current_user):
     buffer = BytesIO()
     pdf.output(buffer, 'F')
     buffer.seek(0)
-    
+
     return send_file(buffer, as_attachment=True, download_name='payment_records.pdf', mimetype='application/pdf')
 
 @app.route('/api/account-details', methods=['GET'])
@@ -489,4 +489,4 @@ def get_account_details(current_user):
 # --- CHANGES END HERE ---
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    app.run(host='0.0.0.0', debug=True, port=5001)
