@@ -547,13 +547,12 @@ const App = () => {
   const renderSidebar = () => (
     <div className={`fixed inset-y-0 left-0 z-50 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0 transition-transform duration-200 ease-in-out w-64 bg-[#1e40af] text-white flex flex-col`}>
       <div className="flex items-center justify-center h-16 bg-[#1e3a8a] border-b border-[#3b82f6]">
-        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center mr-3">
-          <div className="w-8 h-8 bg-gradient-to-b from-red-500 to-red-600 rounded-full relative">
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-4 h-6 bg-white rounded-sm"></div>
-              <div className="absolute w-6 h-1 bg-white top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
-            </div>
-          </div>
+        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center mr-3 overflow-hidden">
+          <img 
+            src="/logo.png" 
+            alt="DCLM Logo" 
+            className="w-8 h-8 object-contain"
+          />
         </div>
         <div className="text-center">
           <span className="text-lg font-bold">DCLM CMS</span>
@@ -916,10 +915,12 @@ const App = () => {
         <div className="min-h-screen flex items-center justify-center bg-gray-100">
           <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
             <div className="text-center mb-6">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-red-500 to-red-600 flex items-center justify-center relative">
-                <div className="w-8 h-10 bg-white rounded-sm relative">
-                  <div className="absolute w-10 h-2 bg-white top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
-                </div>
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white shadow-lg flex items-center justify-center overflow-hidden">
+                <img 
+                  src="/logo.png" 
+                  alt="DCLM Logo" 
+                  className="w-12 h-12 object-contain"
+                />
               </div>
               <h2 className="text-2xl font-bold text-[#1e40af] mb-2">DCLM CMS</h2>
               <p className="text-gray-600 text-sm mb-1">Deeper Christian Life Ministry</p>
